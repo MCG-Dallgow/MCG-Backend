@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/MCG-App/MCG-App-Backend#readme",
   "dependencies": {
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "helmet": "^6.1.5"
   }
 }
