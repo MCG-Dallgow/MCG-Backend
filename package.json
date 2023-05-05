@@ -1,0 +1,22 @@
+{
+  "name": "mcg-app-backend",
+  "version": "0.1.0",
+  "description": "Das Backend der MCG-App",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MCG-App/MCG-App-Backend.git"
+  },
+  "author": "SLH335",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/MCG-App/MCG-App-Backend/issues"
+  },
+  "homepage": "https://github.com/MCG-App/MCG-App-Backend#readme",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
