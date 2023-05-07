@@ -13,8 +13,10 @@ app.use(express.urlencoded({extended: false}))
 
 // ROUTER
 const authRouter = require('./routes/auth')
+const timetableRouter = require('./routes/timetable')
 
 app.use('/auth/', authRouter)
+app.use('/timetable/', timetableRouter)
 
 // RUN
 app.listen(port, () => {
