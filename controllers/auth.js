@@ -10,7 +10,12 @@ exports.signup = async (req, res, next) => {
 
     // check WebUntis credentials and login
     const untis = new WebUntis('Marie-Curie-Gym', username, password, 'herakles.webuntis.com')
-    await untis.login()
+    try {
+        await untis.login()
+    } catch(err) {
+        res.status(400).json({message: 'invalid credentials'})
+        return;
+    }
 
     // check if user already exists in database
     connection.query(`SELECT * FROM user WHERE username = "${username}"`, async (err, data, fields) => {
