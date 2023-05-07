@@ -6,4 +6,4 @@ const auth = require('../controllers/auth')
 // SIGNUP
 router.post('/login', auth.login)
 
-module.exports = router;
+module.exports = router
