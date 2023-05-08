@@ -14,9 +14,11 @@ app.use(express.urlencoded({extended: false}))
 // ROUTER
 const authRouter = require('./routes/auth')
 const timetableRouter = require('./routes/timetable')
+const teachersRouter = require('./routes/teachers')
 
 app.use('/auth/', authRouter)
 app.use('/timetable/', timetableRouter)
+app.use('/teachers/', teachersRouter)
 
 // RUN
 app.listen(port, () => {
