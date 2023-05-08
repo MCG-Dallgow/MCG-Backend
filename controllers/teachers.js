@@ -61,7 +61,7 @@ async function updateTeachers(teachers) {
             // add teacher to database if not already present
             if (data.length == 0) {
                 connection.query(
-                    `INSERT INTO teacher(short, firstname, lastname, title, gender, email)
+                    `INSERT INTO teacher(short, firstname, lastname, title)
                      VALUES ("${teacher.short}", "${teacher.firstname}", "${teacher.lastname}", "${teacher.title}")`
                 )
             }
