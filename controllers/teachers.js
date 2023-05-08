@@ -23,7 +23,22 @@ exports.getTeachers = async (req, res, next) => {
     connection.query(`SELECT * FROM teacher`, async (err, data, fields) => {
         if (err) next(err) // handle database error
 
-        res.json(data)
+        // fetch subjects
+        connection.query(`SELECT * FROM teacher_subject`, async (err2, data2, fields2) => {
+            // add subjects to teacher data
+            for (const index in data) {
+                const teacher = data[index]
+
+                const subjects = [...new Set(data2
+                        .filter((relation) => relation.teacher == teacher.short)
+                        .map((relation) => relation.subject))]
+
+                teacher.subjects = subjects
+            }
+
+            // return teacher data
+            res.json(data)
+        })
     })
 }
 
