@@ -17,7 +17,7 @@ exports.getTeachers = async (req, res, next) => {
     await untis.logout()
 
     // add new teachers to database if any
-    updateTeachers(teachers)
+    await updateTeachers(teachers)
 
     // fetch teacher data from database
     connection.query(`SELECT * FROM teacher`, async (err, data, fields) => {
