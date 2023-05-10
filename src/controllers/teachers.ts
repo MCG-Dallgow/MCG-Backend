@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+import { RequestHandler } from 'express'
 import { Teacher, WebUntis } from 'webuntis';
 import { MysqlError } from 'mysql';
 
@@ -6,7 +6,7 @@ import * as auth from './auth'; // AUTHENTICATION
 import connection from '../services/db'; // DATABASE
 
 // fetch, reformat and return teacher data from WebUntis
-export async function getTeachers(req: Request, res: Response, next: Function) {
+export const getTeachers: RequestHandler = async (req, res, next) => {
     // authenticate and start WebUntis API session
     const untis: WebUntis | undefined = await auth.authenticate(req, res)
     if (!untis) return; // abort if authentication was unsuccessful

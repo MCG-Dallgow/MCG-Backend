@@ -1,5 +1,5 @@
 import { WebUntis, Klasse, Student } from 'webuntis'
-import { Request, Response } from 'express'
+import { RequestHandler, Request, Response } from 'express'
 import { MysqlError } from 'mysql'
 
 import connection from '../services/db' // DATABASE
@@ -30,7 +30,7 @@ export async function authenticate(req: Request, res: Response): Promise<WebUnti
 }
 
 // login user + add to database if not already present
-export async function login(req: Request, res: Response, next: Function) {
+export const login: RequestHandler = async (req, res, next) => {
     // authenticate and start WebUntis API session
     const untis: WebUntis | undefined = await authenticate(req, res)
     if (!untis) return; // abort if authentication was unsuccessful

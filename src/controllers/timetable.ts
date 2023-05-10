@@ -1,10 +1,10 @@
-import { Request, Response } from 'express'
+import { RequestHandler } from 'express'
 import { WebUntis, Lesson } from 'webuntis';
 
 import * as auth from './auth'; // AUTHENTICATION
 
 // fetch, reformat and return timetable data from WebUntis
-export async function getTimetable(req: Request, res: Response, next: Function) {
+export const getTimetable: RequestHandler = async (req, res) => {
     // authenticate and start WebUntis API session
     const untis: WebUntis | undefined = await auth.authenticate(req, res)
     if (!untis) return; // abort if authentication was unsuccessful
