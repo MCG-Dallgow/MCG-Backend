@@ -1,9 +1,9 @@
-import express, { Router } from 'express'
-let router: Router = express.Router()
+import express, { Router } from 'express';
+let router: Router = express.Router();
 
-import * as auth from '../controllers/auth'
+import * as auth from '../controllers/auth';
 
 // LOGIN
-router.post('/login', auth.login)
+router.post('/login', auth.login);
 
-export default router
+export default router;
