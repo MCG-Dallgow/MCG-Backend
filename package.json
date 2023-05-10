@@ -2,9 +2,12 @@
   "name": "mcg-app-backend",
   "version": "0.1.0",
   "description": "Das Backend der MCG-App",
-  "main": "app.js",
+  "main": "app.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx tsc",
+    "start": "node dist/app.js",
+    "dev": "concurrently \"npx tsc --watch\" \"nodemon -q dist/app.js\""
   },
   "repository": {
     "type": "git",
@@ -21,6 +24,14 @@
     "express": "^4.18.2",
     "helmet": "^6.1.5",
     "mysql": "^2.18.1",
+    "typescript": "^5.0.4",
     "webuntis": "^2.0.3"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.17",
+    "@types/mysql": "^2.15.21",
+    "@types/node": "^20.1.2",
+    "concurrently": "^8.0.1",
+    "nodemon": "^2.0.22"
   }
 }

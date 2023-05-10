@@ -1,37 +1,38 @@
-// AUTHENTICATION
-const auth = require('./auth')
+import { Request, Response } from 'express'
+import { Teacher, WebUntis } from 'webuntis';
+import { MysqlError } from 'mysql';
 
-// DATABASE
-const connection = require('../services/db')
+import * as auth from './auth'; // AUTHENTICATION
+import connection from '../services/db'; // DATABASE
 
 // fetch, reformat and return teacher data from WebUntis
-exports.getTeachers = async (req, res, next) => {
+export async function getTeachers(req: Request, res: Response, next: Function) {
     // authenticate and start WebUntis API session
-    untis = await auth.authenticate(req, res)
+    const untis: WebUntis | undefined = await auth.authenticate(req, res)
     if (!untis) return; // abort if authentication was unsuccessful
     
     // fetch and reformat WebUntis teacher data
-    const teachers = formatTeachers(await untis.getTeachers())
+    const teachers: Object[] = formatTeachers(await untis.getTeachers())
 
     // exit WebUntis API session
     await untis.logout()
 
     // add new teachers to database if any
-    await updateTeachers(teachers)
+    await updateTeachers(teachers, next)
 
     // fetch teacher data from database
-    connection.query(`SELECT * FROM teacher`, async (err, data, fields) => {
+    connection.query(`SELECT * FROM teacher`, async (err: any, data: any, fields: any) => {
         if (err) next(err) // handle database error
 
         // fetch subjects
-        connection.query(`SELECT * FROM teacher_subject`, async (err2, data2, fields2) => {
+        connection.query(`SELECT * FROM teacher_subject`, async (err2: any, data2: any, fields2: any) => {
             // add subjects to teacher data
             for (const index in data) {
-                const teacher = data[index]
+                const teacher: any = data[index]
 
                 const subjects = [...new Set(data2
-                        .filter((relation) => relation.teacher == teacher.short)
-                        .map((relation) => relation.subject))]
+                        .filter((relation: any) => relation.teacher == teacher.short)
+                        .map((relation: any) => relation.subject))]
 
                 teacher.subjects = subjects
             }
@@ -42,11 +43,11 @@ exports.getTeachers = async (req, res, next) => {
     })
 }
 
-function formatTeachers(teachers) {
+function formatTeachers(teachers: Teacher[]): Object[] {
     const formattedTeachers = []
 
     for(const index in teachers) {
-        const teacher = teachers[index]
+        const teacher: any = teachers[index]
 
         // filter out irrelevant data
         if (teacher.name.startsWith('NN') || !teacher.active) continue
@@ -55,8 +56,7 @@ function formatTeachers(teachers) {
         formattedTeachers.push({
             short: teacher.name,
             firstname: teacher.foreName,
-            lastname: teacher.longName,
-            title: teacher.title
+            lastname: teacher.longName
         })
     }
 
@@ -64,13 +64,13 @@ function formatTeachers(teachers) {
 }
 
 // add new teachers to database if any
-async function updateTeachers(teachers) {
+async function updateTeachers(teachers: Array<Object>, next: Function) {
     // add new teachers to database
     for (const index in teachers) {
-        const teacher = teachers[index]
+        const teacher: any = teachers[index]
 
         // check if teacher is in database
-        connection.query(`SELECT * FROM teacher WHERE teacher.short="${teacher.short}"`, async (err, data, fields) => {
+        connection.query(`SELECT * FROM teacher WHERE teacher.short="${teacher.short}"`, async (err: MysqlError, data: Array<Object>) => {
             if (err) next(err) // handle database error
 
             // add teacher to database if not already present

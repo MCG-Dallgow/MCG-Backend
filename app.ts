@@ -1,8 +1,10 @@
-const express = require('express')
-const helmet = require('helmet')
-require('dotenv').config()
+import express, { Express, Request, Response } from 'express'
+import helmet from 'helmet'
+import dotenv from 'dotenv'
 
-const app = express()
+dotenv.config()
+
+const app: Express = express()
 const port = 3000
 
 // MIDDLEWARE
@@ -12,9 +14,9 @@ app.use(express.json())
 app.use(express.urlencoded({extended: false}))
 
 // ROUTER
-const authRouter = require('./routes/auth')
-const timetableRouter = require('./routes/timetable')
-const teachersRouter = require('./routes/teachers')
+import authRouter from './routes/auth'
+import timetableRouter from './routes/timetable'
+import teachersRouter from './routes/teachers'
 
 app.use('/auth/', authRouter)
 app.use('/timetable/', timetableRouter)

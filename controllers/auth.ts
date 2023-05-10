@@ -1,22 +1,23 @@
-const { WebUntis } = require('webuntis')
+import { WebUntis, Klasse, Student } from 'webuntis'
+import { Request, Response } from 'express'
+import { MysqlError } from 'mysql'
 
-// DATABASE
-const connection = require('../services/db')
+import connection from '../services/db' // DATABASE
 
-async function getStudentClass(untis) {
-    const classId = untis.sessionInformation.klasseId
-    const classes = await untis.getClasses()
+async function getStudentClass(untis: WebUntis): Promise<Klasse> {
+    const classId: number = untis.sessionInformation!.klasseId!
+    const classes: Klasse[] = await untis.getClasses(false, 2023)
     return classes.filter((class_) => class_.id == classId)[0]
 }
 
 // check WebUntis credentials and return API session
-exports.authenticate = async (req, res) => {
+export async function authenticate(req: Request, res: Response): Promise<WebUntis | undefined> {
     // get credentials from request body
-    const username = req.body['username']
-    const password = req.body['password']
+    const username: string = req.body['username']!
+    const password: string = req.body['password']!
 
     // check WebUntis credentials and start API session
-    const untis = new WebUntis('Marie-Curie-Gym', username, password, 'herakles.webuntis.com')
+    const untis: WebUntis = new WebUntis('Marie-Curie-Gym', username, password, 'herakles.webuntis.com')
     try {
         await untis.login() 
     } catch(err) {
@@ -29,14 +30,14 @@ exports.authenticate = async (req, res) => {
 }
 
 // login user + add to database if not already present
-exports.login = async (req, res, next) => {
+export async function login(req: Request, res: Response, next: Function) {
     // authenticate and start WebUntis API session
-    untis = await this.authenticate(req, res)
+    const untis: WebUntis | undefined = await authenticate(req, res)
     if (!untis) return; // abort if authentication was unsuccessful
 
     // get user data from WebUntis
-    const students = await untis.getStudents()
-    const student = students.filter(student => student.id == untis.sessionInformation.personId)[0]
+    const students: Student[] = await untis.getStudents()
+    const student: Student = students.filter(student => student.id == untis.sessionInformation!.personId)[0]
     const studentClass = await getStudentClass(untis)
     const user = {
         username: student.name,
@@ -49,7 +50,7 @@ exports.login = async (req, res, next) => {
     await untis.logout()
 
     // add user to database if not already present
-    connection.query(`SELECT * FROM user WHERE username = "${user.username}"`, async (err, data, fields) => {
+    connection.query(`SELECT * FROM user WHERE username = "${user.username}"`, async (err: MysqlError, data: Array<Object>) => {
         if (err) next(err) // handle database error
 
         if(data.length == 0) {
