@@ -22,6 +22,16 @@ app.use('/auth/', authRouter)
 app.use('/timetable/', timetableRouter)
 app.use('/teachers/', teachersRouter)
 
+// ERROR MESSAGE
+app.use((
+    err: Error,
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+) => {
+    res.status(500).json({message: err.message})
+})
+
 // RUN
 app.listen(port, () => {
     console.log(`MCG-App backend listening on port ${port}`)
