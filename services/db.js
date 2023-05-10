@@ -1,10 +1,10 @@
 const mysql = require('mysql')
 
 const connection = mysql.createConnection({
-    host: 'localhost',
+    host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-    database: 'mcg-app'
+    database: process.env.DB_NAME
 })
 
 connection.connect()
