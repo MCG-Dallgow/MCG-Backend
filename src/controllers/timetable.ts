@@ -65,8 +65,7 @@ function formatTimetable(timetable: Lesson[]): Object[] {
             // reformat teacher data
             var teachers = [];
             var originalTeachers = [];
-            for (const index in current.te) {
-                const teacher: any = current.te[index];
+            for (const teacher of current.te) {
                 if (teacher.name) teachers.push(teacher.name);
                 if (teacher.orgname) originalTeachers.push(teacher.orgname);
             }
@@ -76,8 +75,7 @@ function formatTimetable(timetable: Lesson[]): Object[] {
             // reformat room data
             var rooms = [];
             var originalRooms = [];
-            for (const index in current.ro) {
-                const room: any = current.ro[index];
+            for (const room of current.ro) {
                 if (room.name) rooms.push(room.name);
                 if (room.orgname) originalRooms.push(room.orgname);
             }

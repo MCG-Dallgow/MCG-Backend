@@ -29,8 +29,7 @@ export const getTeachers: RequestHandler = async (req, res, next) => {
             `SELECT * FROM teacher_subject`,
             async (err2: any, data2: any, fields2: any) => {
                 // add subjects to teacher data
-                for (const index in data) {
-                    const teacher: any = data[index];
+                for (const teacher of data) {
 
                     const subjects = [
                         ...new Set(
@@ -50,11 +49,10 @@ export const getTeachers: RequestHandler = async (req, res, next) => {
     });
 };
 
-function formatTeachers(teachers: Teacher[]): Object[] {
+function formatTeachers(teachers: any): Object[] {
     const formattedTeachers = [];
 
-    for (const index in teachers) {
-        const teacher: any = teachers[index];
+    for (const teacher of teachers) {
 
         // filter out irrelevant data
         if (teacher.name.startsWith('NN') || !teacher.active) continue;
@@ -71,10 +69,9 @@ function formatTeachers(teachers: Teacher[]): Object[] {
 }
 
 // add new teachers to database if any
-async function updateTeachers(teachers: Array<Object>, next: Function) {
+async function updateTeachers(teachers: any, next: Function) {
     // add new teachers to database
-    for (const index in teachers) {
-        const teacher: any = teachers[index];
+    for (const teacher of teachers) {
 
         // check if teacher is in database
         connection.query(
