@@ -1,12 +1,12 @@
 import { RequestHandler } from 'express';
-import { WebUntis, Lesson } from 'webuntis';
+import { Lesson } from 'webuntis';
 
-import * as auth from './auth'; // AUTHENTICATION
+import * as auth from './auth';
 
 // fetch, reformat and return timetable data from WebUntis
 export const getTimetable: RequestHandler = async (req, res) => {
     // authenticate and start WebUntis API session
-    const untis: WebUntis | undefined = await auth.authenticate(req, res);
+    const untis = await auth.authenticate(req, res);
     if (!untis) return; // abort if authentication was unsuccessful
 
     // get date range from request body
@@ -14,7 +14,7 @@ export const getTimetable: RequestHandler = async (req, res) => {
     const endDate = new Date(req.body['enddate']);
 
     // fetch timetable data from WebUntis API
-    const timetable: Lesson[] = await untis.getOwnTimetableForRange(startDate, endDate);
+    const timetable = await untis.getOwnTimetableForRange(startDate, endDate);
 
     // exit WebUntis API session
     untis.logout();
@@ -27,9 +27,9 @@ export const getTimetable: RequestHandler = async (req, res) => {
 };
 
 // format timetable data for increased readability and efficiency
-function formatTimetable(timetable: Lesson[]): Object[] {
+function formatTimetable(timetable: Lesson[]) {
     // sort timetable by date
-    timetable.sort((a: Lesson, b: Lesson) => {
+    timetable.sort((a, b) => {
         if (a.date < b.date) return -1;
         if (a.date > b.date) return 1;
         if (a.startTime < b.startTime) return -1;

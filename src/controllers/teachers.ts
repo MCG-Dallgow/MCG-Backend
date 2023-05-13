@@ -1,92 +1,89 @@
 import { RequestHandler } from 'express';
-import { Teacher, WebUntis } from 'webuntis';
-import { MysqlError } from 'mysql';
+import { Gender, Teacher } from '@prisma/client';
 
-import * as auth from './auth'; // AUTHENTICATION
-import connection from '../services/db'; // DATABASE
+import * as auth from './auth';
+import db from '../services/db';
 
 // fetch, reformat and return teacher data from WebUntis
-export const getTeachers: RequestHandler = async (req, res, next) => {
+export const getTeachers: RequestHandler = async (req, res) => {
     // authenticate and start WebUntis API session
-    const untis: WebUntis | undefined = await auth.authenticate(req, res);
+    const untis = await auth.authenticate(req, res);
     if (!untis) return; // abort if authentication was unsuccessful
 
     // fetch and reformat WebUntis teacher data
-    const teachers: Object[] = formatTeachers(await untis.getTeachers());
+    const teachers = formatTeachers(await untis.getTeachers());
 
     // exit WebUntis API session
     await untis.logout();
 
     // add new teachers to database if any
-    await updateTeachers(teachers, next);
+    await updateTeachers(teachers);
 
     // fetch teacher data from database
-    connection.query(`SELECT * FROM teacher`, async (err: any, data: any, fields: any) => {
-        if (err) next(err); // handle database error
-
-        // fetch subjects
-        connection.query(
-            `SELECT * FROM teacher_subject`,
-            async (err2: any, data2: any, fields2: any) => {
-                // add subjects to teacher data
-                for (const teacher of data) {
-
-                    const subjects = [
-                        ...new Set(
-                            data2
-                                .filter((relation: any) => relation.teacher == teacher.short)
-                                .map((relation: any) => relation.subject)
-                        ),
-                    ];
-
-                    teacher.subjects = subjects;
-                }
-
-                // return teacher data
-                res.json(data);
-            }
-        );
+    const dbTeachers = await db.teacher.findMany({
+        include: {
+            subjects: true,
+        },
     });
+
+    // return teacher data
+    return res.status(200).json({ data: dbTeachers });
 };
 
-function formatTeachers(teachers: any): Object[] {
+// reformat WebUntis teacher data
+function formatTeachers(teachers: any) {
     const formattedTeachers = [];
 
     for (const teacher of teachers) {
-
         // filter out irrelevant data
         if (teacher.name.startsWith('NN') || !teacher.active) continue;
 
         // reformat data
         formattedTeachers.push({
-            short: teacher.name,
+            id: teacher.name,
             firstname: teacher.foreName,
             lastname: teacher.longName,
-        });
+            gender: Gender.UNKNOWN,
+            email: generateMCGEmail(teacher.foreName, teacher.longName),
+        } as Teacher);
     }
 
     return formattedTeachers;
 }
 
 // add new teachers to database if any
-async function updateTeachers(teachers: any, next: Function) {
+async function updateTeachers(teachers: Teacher[]) {
     // add new teachers to database
     for (const teacher of teachers) {
+        // check if teacher is already in database
+        const dbTeacher = await db.teacher.findUnique({
+            where: {
+                id: teacher.id,
+            },
+        });
 
-        // check if teacher is in database
-        connection.query(
-            `SELECT * FROM teacher WHERE teacher.short="${teacher.short}"`,
-            async (err: MysqlError, data: Array<Object>) => {
-                if (err) next(err); // handle database error
-
-                // add teacher to database if not already present
-                if (data.length == 0) {
-                    connection.query(
-                        `INSERT INTO teacher(short, firstname, lastname, title)
-                        VALUES ("${teacher.short}", "${teacher.firstname}", "${teacher.lastname}", "${teacher.title}")`
-                    );
-                }
-            }
-        );
+        // add teacher to database if not already present
+        if (!dbTeacher) {
+            await db.teacher.create({ data: teacher });
+        }
     }
+}
+
+// generate teacher email address from first and last name
+function generateMCGEmail(firstname: string, lastname: string) {
+    firstname = replaceDiacritics(firstname.toLowerCase());
+    lastname = replaceDiacritics(lastname.toLowerCase());
+    return `${firstname}.${lastname}@lk.brandenburg.de`;
+}
+
+// replace diacritics like umlauts
+function replaceDiacritics(input: string) {
+    return input
+        .replaceAll('ä', 'ae')
+        .replaceAll('Ä', 'Ae')
+        .replaceAll('ö', 'oe')
+        .replaceAll('Ö', 'Oe')
+        .replaceAll('ü', 'ue')
+        .replaceAll('Ü', 'Ue')
+        .replaceAll('ß', 'ss');
 }

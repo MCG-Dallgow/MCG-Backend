@@ -1,6 +1,7 @@
 import express, { Express, Request, Response, NextFunction } from 'express';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
+import { json, urlencoded } from 'body-parser';
 
 dotenv.config();
 
@@ -10,8 +11,8 @@ const port = process.env.PORT;
 // MIDDLEWARE
 app.use(helmet());
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(json());
+app.use(urlencoded({ extended: false }));
 
 // ROUTER
 import authRouter from './routes/auth';

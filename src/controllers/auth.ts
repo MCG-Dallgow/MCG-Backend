@@ -1,17 +1,17 @@
-import { WebUntis, Klasse, Student } from 'webuntis';
+import { WebUntis, Klasse } from 'webuntis';
 import { RequestHandler, Request, Response } from 'express';
-import { MysqlError } from 'mysql';
 
-import connection from '../services/db'; // DATABASE
+import db from '../services/db';
 
 async function getStudentClass(untis: WebUntis): Promise<Klasse> {
-    const classId: number = untis.sessionInformation!.klasseId!;
-    const classes: Klasse[] = await untis.getClasses(false, 2023);
+    const classId = untis.sessionInformation!.klasseId!;
+    const schoolYearId = (await untis.getLatestSchoolyear()).id;
+    const classes = await untis.getClasses(undefined, schoolYearId);
     return classes.filter((class_) => class_.id == classId)[0];
 }
 
 // check WebUntis credentials and return API session
-export async function authenticate(req: Request, res: Response): Promise<WebUntis | undefined> {
+export async function authenticate(req: Request, res: Response) {
     // get credentials from request body
     const username: string = req.body['username'];
     const password: string = req.body['password'];
@@ -35,40 +35,54 @@ export async function authenticate(req: Request, res: Response): Promise<WebUnti
 }
 
 // login user + add to database if not already present
-export const login: RequestHandler = async (req, res, next) => {
+export const login: RequestHandler = async (req, res) => {
     // authenticate and start WebUntis API session
-    const untis: WebUntis | undefined = await authenticate(req, res);
+    const untis = await authenticate(req, res);
     if (!untis) return; // abort if authentication was unsuccessful
 
     // get user data from WebUntis
-    const students: Student[] = await untis.getStudents();
-    const student: Student = students.filter((student) => student.id == untis.sessionInformation!.personId)[0];
+    const students = await untis.getStudents();
+    const student = students.filter(
+        (student) => student.id == untis.sessionInformation!.personId
+    )[0];
     const studentClass = await getStudentClass(untis);
-    const user = {
-        username: student.name,
-        firstname: student.foreName,
-        lastname: student.longName,
-        class: studentClass.name,
-    };
 
     // exit WebUntis API session
     await untis.logout();
 
-    // add user to database if not already present
-    connection.query(
-        `SELECT * FROM user WHERE username = "${user.username}"`,
-        async (err: MysqlError, data: Array<Object>) => {
-            if (err) next(err); // handle database error
+    // check if user is in database
+    var user = await db.student.findUnique({
+        where: {
+            id: student.name,
+        },
+        include: {
+            group: true,
+        },
+    });
 
-            if (data.length == 0) {
-                // create new user in database
-                connection.query(
-                    `INSERT INTO user(username, firstname, lastname, class) 
-                    VALUES ("${user.username}", "${user.firstname}", "${user.lastname}", "${user.class}")`
-                );
-            }
-        }
-    );
+    // add user to database if not already present
+    if (!user) {
+        user = await db.student.create({
+            data: {
+                id: student.name,
+                firstname: student.foreName,
+                lastname: student.longName,
+                group: {
+                    connectOrCreate: {
+                        create: {
+                            name: studentClass.name,
+                        },
+                        where: {
+                            name: studentClass.name,
+                        },
+                    },
+                },
+            },
+            include: {
+                group: true,
+            },
+        });
+    }
 
     // return user data
     res.json({ data: user });

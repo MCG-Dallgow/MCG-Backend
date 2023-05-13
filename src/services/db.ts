@@ -1,12 +1,17 @@
-import mysql from 'mysql';
+import { PrismaClient } from '@prisma/client';
 
-const connection: mysql.Connection = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-});
+const db = new PrismaClient();
 
-connection.connect();
+async function main() {
+    console.log('Database connected successfully');
+}
 
-export default connection;
+main()
+    .catch((e) => {
+        console.error(e.message);
+    })
+    .finally(async () => {
+        await db.$disconnect();
+    });
+
+export default db;
