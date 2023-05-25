@@ -3,7 +3,7 @@ import { RequestHandler, Request, Response } from 'express';
 
 import db from '../services/db';
 
-async function getStudentClass(untis: WebUntis): Promise<Klasse> {
+export async function getStudentClass(untis: WebUntis): Promise<Klasse> {
     const classId = untis.sessionInformation!.klasseId!;
     const schoolYearId = (await untis.getLatestSchoolyear()).id;
     const classes = await untis.getClasses(undefined, schoolYearId);

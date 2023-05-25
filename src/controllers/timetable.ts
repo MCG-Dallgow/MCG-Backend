@@ -1,5 +1,5 @@
 import { RequestHandler } from 'express';
-import { Lesson } from 'webuntis';
+import { Klasse, Lesson } from 'webuntis';
 
 import * as auth from './auth';
 
@@ -16,18 +16,21 @@ export const getTimetable: RequestHandler = async (req, res) => {
     // fetch timetable data from WebUntis API
     const timetable = await untis.getOwnTimetableForRange(startDate, endDate);
 
+    // get student class
+    const studentClass = await auth.getStudentClass(untis);
+
     // exit WebUntis API session
     untis.logout();
 
     // format timetable data
-    const formattedTimetable = formatTimetable(timetable);
+    const formattedTimetable = formatTimetable(timetable, studentClass);
 
     // return timetable data
     res.json({ data: formattedTimetable });
 };
 
 // format timetable data for increased readability and efficiency
-function formatTimetable(timetable: Lesson[]) {
+function formatTimetable(timetable: Lesson[], studentClass: Klasse) {
     // sort timetable by date
     timetable.sort((a, b) => {
         if (a.date < b.date) return -1;
@@ -36,6 +39,11 @@ function formatTimetable(timetable: Lesson[]) {
         if (a.startTime > b.startTime) return 1;
         return 1;
     });
+
+    // filter out entries not belonging to class of student
+    timetable = timetable.filter(
+        (lesson) => lesson.kl[0].name.substring(0, 2) === studentClass.name.substring(0, 2)
+    );
 
     const formattedTimetable = [];
     // iterate over timetable entries
