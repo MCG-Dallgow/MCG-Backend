@@ -89,9 +89,9 @@ function formatTimetable(timetable: Lesson[]) {
                 endTime: endTime,
                 code: current.code,
                 substitutionText: current.substText,
+                course: current.su[0].name,
                 teachers: teachers,
                 ...(originalTeachers.length > 0 && { originalTeachers: originalTeachers }),
-                course: current.su.name,
                 rooms: rooms,
                 ...(originalRooms.length > 0 && { originalRooms: originalRooms }),
             });
