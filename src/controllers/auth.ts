@@ -12,9 +12,11 @@ export async function getStudentClass(untis: WebUntis): Promise<Klasse> {
 
 // check WebUntis credentials and return API session
 export async function authenticate(req: Request, res: Response) {
-    // get credentials from request body
-    const username: string = req.body['username'];
-    const password: string = req.body['password'];
+    // get credentials from authorization header
+    const base64String: string = req.headers.authorization?.split(' ')[1]!;
+    const credentials: string = Buffer.from(base64String, 'base64').toString();
+    const username: string = credentials.split(':')[0];
+    const password: string = credentials.split(':')[1];
 
     // check WebUntis credentials and start API session
     const untis: WebUntis = new WebUntis(
@@ -26,7 +28,7 @@ export async function authenticate(req: Request, res: Response) {
     try {
         await untis.login();
     } catch (err) {
-        res.status(400).json({ message: 'invalid credentials' });
+        res.status(401).json({ message: 'invalid credentials' });
         return undefined;
     }
 
