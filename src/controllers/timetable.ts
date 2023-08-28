@@ -1,5 +1,5 @@
 import { RequestHandler } from 'express';
-import { Klasse, Lesson } from 'webuntis';
+import { Klasse, Lesson, ShortData } from 'webuntis';
 
 import * as auth from './auth';
 
@@ -17,13 +17,13 @@ export const getTimetable: RequestHandler = async (req, res) => {
     const timetable = await untis.getOwnTimetableForRange(startDate, endDate);
 
     // get student class
-    const studentClass = await auth.getStudentClass(untis);
+    const group = await auth.getStudentGroup(untis);
 
     // exit WebUntis API session
     untis.logout();
 
     // format timetable data
-    const formattedTimetable = formatTimetable(timetable, studentClass);
+    const formattedTimetable = formatTimetable(timetable, group);
 
     // return timetable data
     res.json({ data: formattedTimetable });
@@ -90,6 +90,12 @@ function formatTimetable(timetable: Lesson[], studentClass: Klasse) {
             rooms = [...new Set(rooms)]; // remove duplicate rooms
             originalRooms = [...new Set(originalRooms)];
 
+            // reformat course data
+            const course = {
+                id: current.su[0].name,
+                subject: getSubjectId(current.su[0]),
+            }
+
             // append formatted lesson to new timetable object
             formattedTimetable.push({
                 date: date,
@@ -97,7 +103,7 @@ function formatTimetable(timetable: Lesson[], studentClass: Klasse) {
                 endTime: endTime,
                 code: current.code,
                 substitutionText: current.substText,
-                course: current.su[0].name,
+                course: course,
                 teachers: teachers,
                 ...(originalTeachers.length > 0 && { originalTeachers: originalTeachers }),
                 rooms: rooms,
@@ -105,5 +111,26 @@ function formatTimetable(timetable: Lesson[], studentClass: Klasse) {
             });
         }
     }
+
     return formattedTimetable;
+}
+
+function getSubjectId(subject: ShortData): string {
+    // get first three letters of name
+    var id = subject.longname.match(/.{3}/)![0];
+
+    // handle special cases
+    switch (id) {
+        case 'Sem':
+            id = 'SK';
+            break;
+        case 'Pol':
+            id = 'PB';
+            break;
+        case 'Wir':
+            id = 'WAT';
+            break;
+    }
+
+    return id;
 }
