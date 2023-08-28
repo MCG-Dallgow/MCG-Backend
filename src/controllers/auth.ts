@@ -1,13 +1,16 @@
 import { WebUntis, Klasse } from 'webuntis';
 import { RequestHandler, Request, Response } from 'express';
+import { eq } from 'drizzle-orm';
 
-import db from '../services/db';
+import db from '../db/db';
+import { User, users } from '../db/schema'
 
-export async function getStudentClass(untis: WebUntis): Promise<Klasse> {
-    const classId = untis.sessionInformation!.klasseId!;
+export async function getStudentGroup(untis: WebUntis): Promise<Klasse> {
+    const groupId = untis.sessionInformation!.klasseId!;
     const schoolYearId = (await untis.getLatestSchoolyear()).id;
-    const classes = await untis.getClasses(undefined, schoolYearId);
-    return classes.filter((class_) => class_.id == classId)[0];
+    const groups = await untis.getClasses(undefined, schoolYearId);
+    const group = groups.filter((group) => group.id == groupId)[0];
+    return group
 }
 
 // check WebUntis credentials and return API session
@@ -47,43 +50,28 @@ export const login: RequestHandler = async (req, res) => {
     const student = students.filter(
         (student) => student.id == untis.sessionInformation!.personId
     )[0];
-    const studentClass = await getStudentClass(untis);
+    const group = await getStudentGroup(untis);
+    const groupName = group.name.replace('Jhg', '')
+    const grade = parseInt(groupName.match(/[0-9]{2}/)![0])
 
     // exit WebUntis API session
     await untis.logout();
 
     // check if user is in database
-    var user = await db.student.findUnique({
-        where: {
-            id: student.name,
-        },
-        include: {
-            group: true,
-        },
-    });
+    var user: User = (await db.select().from(users).where(eq(users.id, student.name)))[0]
 
     // add user to database if not already present
     if (!user) {
-        user = await db.student.create({
-            data: {
-                id: student.name,
-                firstname: student.foreName,
-                lastname: student.longName,
-                group: {
-                    connectOrCreate: {
-                        create: {
-                            name: studentClass.name,
-                        },
-                        where: {
-                            name: studentClass.name,
-                        },
-                    },
-                },
-            },
-            include: {
-                group: true,
-            },
-        });
+        await db.insert(users).values({
+            id: student.name,
+            firstname: student.foreName,
+            lastname: student.longName,
+            type: 'student',
+            grade: grade,
+            group: groupName,
+        })
+
+        user = (await db.select().from(users).where(eq(users.id, student.name)))[0]
     }
 
     // return user data
