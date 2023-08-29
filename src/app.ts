@@ -18,10 +18,12 @@ app.use(urlencoded({ extended: false }));
 import authRouter from './routes/auth';
 import timetableRouter from './routes/timetable';
 import teachersRouter from './routes/teachers';
+import coursesRouter from './routes/courses';
 
 app.use('/auth/', authRouter);
 app.use('/timetable/', timetableRouter);
 app.use('/teachers/', teachersRouter);
+app.use('/courses/', coursesRouter);
 
 // ERROR MESSAGE
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {

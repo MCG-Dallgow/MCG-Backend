@@ -1,7 +1,8 @@
 import { RequestHandler } from 'express';
-import { Lesson, ShortData } from 'webuntis';
+import { Lesson } from 'webuntis';
 
 import * as auth from './auth';
+import { getSubjectId } from '../util/util'
 
 // fetch, reformat and return timetable data from WebUntis
 export const getTimetable: RequestHandler = async (req, res) => {
@@ -110,27 +111,4 @@ function formatTimetable(timetable: Lesson[], studentGroup: string) {
     }
 
     return formattedTimetable;
-}
-
-function getSubjectId(subject: ShortData): string {
-    // get first three letters of name
-    var id = subject.longname.match(/.{3}/)![0];
-
-    // handle special cases
-    switch (id) {
-        case 'Sem':
-            id = 'SK';
-            break;
-        case 'Pol':
-            id = 'PB';
-            break;
-        case 'Wir':
-            id = 'WAT';
-            break;
-        case 'Leb':
-            id = 'LER';
-            break;
-    }
-
-    return id;
 }
