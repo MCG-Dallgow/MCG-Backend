@@ -1,12 +1,12 @@
 import { RequestHandler } from 'express';
-import { Klasse, Lesson, ShortData } from 'webuntis';
+import { Lesson, ShortData } from 'webuntis';
 
 import * as auth from './auth';
 
 // fetch, reformat and return timetable data from WebUntis
 export const getTimetable: RequestHandler = async (req, res) => {
     // authenticate and start WebUntis API session
-    const untis = await auth.authenticate(req, res);
+    const [untis, user] = await auth.authenticate(req, res, true);
     if (!untis) return; // abort if authentication was unsuccessful
 
     // get date range from request body
@@ -16,21 +16,18 @@ export const getTimetable: RequestHandler = async (req, res) => {
     // fetch timetable data from WebUntis API
     const timetable = await untis.getOwnTimetableForRange(startDate, endDate);
 
-    // get student class
-    const group = await auth.getStudentGroup(untis);
-
     // exit WebUntis API session
     untis.logout();
 
     // format timetable data
-    const formattedTimetable = formatTimetable(timetable, group);
+    const formattedTimetable = formatTimetable(timetable, user!.group!);
 
     // return timetable data
     res.json({ data: formattedTimetable });
 };
 
 // format timetable data for increased readability and efficiency
-function formatTimetable(timetable: Lesson[], studentClass: Klasse) {
+function formatTimetable(timetable: Lesson[], studentGroup: string) {
     // sort timetable by date
     timetable.sort((a, b) => {
         if (a.date < b.date) return -1;
@@ -42,7 +39,7 @@ function formatTimetable(timetable: Lesson[], studentClass: Klasse) {
 
     // filter out entries not belonging to class of student
     timetable = timetable.filter(
-        (lesson) => lesson.kl[0].name.substring(0, 2) === studentClass.name.substring(0, 2)
+        (lesson) => lesson.kl[0].name.includes(studentGroup)
     );
 
     const formattedTimetable = [];
@@ -129,6 +126,9 @@ function getSubjectId(subject: ShortData): string {
             break;
         case 'Wir':
             id = 'WAT';
+            break;
+        case 'Leb':
+            id = 'LER';
             break;
     }
 

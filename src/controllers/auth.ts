@@ -1,20 +1,21 @@
-import { WebUntis, Klasse } from 'webuntis';
+import { WebUntis } from 'webuntis';
 import { RequestHandler, Request, Response } from 'express';
 import { eq } from 'drizzle-orm';
 
 import db from '../db/db';
 import { User, users } from '../db/schema'
 
-export async function getStudentGroup(untis: WebUntis): Promise<Klasse> {
+async function getStudentGroup(untis: WebUntis): Promise<string> {
     const groupId = untis.sessionInformation!.klasseId!;
     const schoolYearId = (await untis.getLatestSchoolyear()).id;
     const groups = await untis.getClasses(undefined, schoolYearId);
     const group = groups.filter((group) => group.id == groupId)[0];
-    return group
+    const groupName = group.name.replace('Jhg', '')
+    return groupName
 }
 
 // check WebUntis credentials and return API session
-export async function authenticate(req: Request, res: Response) {
+export async function authenticate(req: Request, res: Response, requireUser: boolean): Promise<[WebUntis | undefined, User | undefined]> {
     // get credentials from authorization header
     const base64String: string = req.headers.authorization?.split(' ')[1]!;
     const credentials: string = Buffer.from(base64String, 'base64').toString();
@@ -32,33 +33,37 @@ export async function authenticate(req: Request, res: Response) {
         await untis.login();
     } catch (err) {
         res.status(401).json({ message: 'invalid credentials' });
-        return undefined;
+        return [undefined, undefined];
+    }
+
+    // check if user is in database
+    var user: User = (await db.select().from(users).where(eq(users.id, username)))[0];
+
+    if (requireUser && !user) {
+        res.status(401).json({ message: 'user not logged in' });
+        return [undefined, undefined];
     }
 
     // return API session
-    return untis;
+    return [untis, user];
 }
 
 // login user + add to database if not already present
 export const login: RequestHandler = async (req, res) => {
     // authenticate and start WebUntis API session
-    const untis = await authenticate(req, res);
+    var [untis, user] = await authenticate(req, res, false);
     if (!untis) return; // abort if authentication was unsuccessful
 
     // get user data from WebUntis
     const students = await untis.getStudents();
     const student = students.filter(
-        (student) => student.id == untis.sessionInformation!.personId
+        (student) => student.id == untis!.sessionInformation!.personId
     )[0];
     const group = await getStudentGroup(untis);
-    const groupName = group.name.replace('Jhg', '')
-    const grade = parseInt(groupName.match(/[0-9]{2}/)![0])
+    const grade = parseInt(group.match(/[0-9]{2}/)![0]);
 
     // exit WebUntis API session
     await untis.logout();
-
-    // check if user is in database
-    var user: User = (await db.select().from(users).where(eq(users.id, student.name)))[0]
 
     // add user to database if not already present
     if (!user) {
@@ -68,10 +73,10 @@ export const login: RequestHandler = async (req, res) => {
             lastname: student.longName,
             type: 'student',
             grade: grade,
-            group: groupName,
+            group: group,
         })
 
-        user = (await db.select().from(users).where(eq(users.id, student.name)))[0]
+        user = (await db.select().from(users).where(eq(users.id, student.name)))[0];
     }
 
     // return user data

@@ -5,7 +5,7 @@ import * as auth from './auth';
 // fetch, reformat and return teacher data from WebUntis
 export const getTeachers: RequestHandler = async (req, res) => {
     // authenticate and start WebUntis API session
-    const untis = await auth.authenticate(req, res);
+    const [untis, _] = await auth.authenticate(req, res, true);
     if (!untis) return; // abort if authentication was unsuccessful
 
     // fetch and reformat WebUntis teacher data
