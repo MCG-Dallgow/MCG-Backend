@@ -91,7 +91,7 @@ function formatTimetable(timetable: Lesson[], studentGroup: string) {
             // reformat course data
             const course = {
                 id: current.su[0].name,
-                subject: getSubjectId(current.su[0]),
+                subject: getSubjectId(current.su[0].longname),
             }
 
             // append formatted lesson to new timetable object
