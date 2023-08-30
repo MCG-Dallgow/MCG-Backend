@@ -1,4 +1,5 @@
-import { WebUntis } from 'webuntis';
+import { WebUntis, WebUntisSecretAuth } from 'webuntis';
+import { authenticator as Authenticator } from 'otplib';
 import { RequestHandler, Request, Response } from 'express';
 import { eq } from 'drizzle-orm';
 
@@ -23,17 +24,29 @@ export async function authenticate(req: Request, res: Response, requireUser: boo
     const password: string = credentials.split(':')[1];
 
     // check WebUntis credentials and start API session
-    const untis: WebUntis = new WebUntis(
+    var untis: WebUntis = new WebUntisSecretAuth(
         'Marie-Curie-Gym',
         username,
         password,
-        'herakles.webuntis.com'
+        'herakles.webuntis.com',
+        'custom-identity',
+        Authenticator,
     );
     try {
         await untis.login();
     } catch (err) {
-        res.status(401).json({ message: 'invalid credentials' });
-        return [undefined, undefined];
+        untis = new WebUntis(
+            'Marie-Curie-Gym',
+            username,
+            password,
+            'herakles.webuntis.com',
+        );
+        try {
+            await untis.login();
+        } catch(err) {
+            res.status(401).json({ message: 'invalid credentials' });
+            return [undefined, undefined];
+        }
     }
 
     // check if user is in database
