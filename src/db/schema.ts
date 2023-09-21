@@ -1,4 +1,4 @@
-import { mysqlEnum, mysqlTable, varchar, tinyint, int } from 'drizzle-orm/mysql-core';
+import { mysqlEnum, mysqlTable, varchar, text, tinyint, int, date } from 'drizzle-orm/mysql-core';
 import { relations } from 'drizzle-orm';
 
 // --- USER ---
@@ -18,7 +18,10 @@ export type User = typeof users.$inferSelect;
 export const posts = mysqlTable('posts', {
   id: int('id').autoincrement().primaryKey(),
   title: varchar('title', { length: 100 }).notNull(),
-  authorId: varchar('author_id', { length: 8 }),
+  authorId: varchar('author_id', { length: 8 }).notNull().references(() => users.id),
+  creationDate: date('creation_date'),
+  editedDate: date('edited_date'),
+  data: varchar('data', { length: 500 }).notNull()
 });
 export type Post = typeof posts.$inferSelect;
 
@@ -27,19 +30,4 @@ export const postRelations = relations(posts, ({ one, many }) => ({
     fields: [posts.authorId],
     references: [users.id],
   }),
-  content: many(contentBlocks),
 }))
-
-export const contentBlocks = mysqlTable('content_blocks', {
-  id: int('id').autoincrement().primaryKey(),
-  postId: int('post_id').notNull(),
-  type: mysqlEnum('type', ['text']).notNull(),
-});
-export type ContentBlock = typeof contentBlocks.$inferSelect;
-
-export const contentBlockRelations = relations(contentBlocks, ({ one }) => ({
-  post: one(posts, {
-    fields: [contentBlocks.postId],
-    references: [posts.id],
-  })
-}));
