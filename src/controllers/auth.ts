@@ -29,6 +29,7 @@ export async function authenticate(req: Request, res: Response, requireUser: boo
         username,
         password,
         'herakles.webuntis.com',
+        undefined,
         Authenticator,
     );
     try {
