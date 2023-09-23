@@ -35,8 +35,8 @@ export const getStaff: RequestHandler = async (req, res) => {
         if (entry.staff.id != lastPersonId) {
             staffMembers.push({
                 id: entry.staff.id,
-                firstname: entry.staff.id,
-                lastname: entry.staff.id,
+                firstname: entry.staff.firstname,
+                lastname: entry.staff.lastname,
                 gender: entry.staff.gender,
                 email: entry.staff.email,
                 subjects: [],
