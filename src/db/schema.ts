@@ -13,15 +13,29 @@ export const users = mysqlTable('users', {
 });
 export type User = typeof users.$inferSelect;
 
+// --- SUBJECT ---
+
+export const subjects = mysqlTable('subject', {
+  id: varchar('id', { length: 3 }).primaryKey(),
+  name: varchar('name', { length: 30 }).notNull(),
+});
+export type Subject = typeof subjects.$inferSelect;
+
 // --- STAFF ---
 
 export const staff = mysqlTable('staff', {
   id: varchar('id', { length: 8 }).primaryKey(),
   firstname: varchar('firstname', { length: 50 }).notNull(),
   lastname: varchar('lastname', { length: 50 }).notNull(),
-  email: varchar('email', { length: 256 }).primaryKey(),
+  gender: mysqlEnum('gender', ['M', 'F', 'D']),
+  email: varchar('email', { length: 256 }),
 });
 export type Staff = typeof staff.$inferSelect;
+
+export const staffToSubjects = mysqlTable('staff_to_subjects', {
+  staffId: varchar('staff_id', { length: 8 }).notNull().references(() => staff.id),
+  subjectId: varchar('subject_id', { length: 3 }).notNull().references(() => subjects.id),
+});
 
 // --- POST ---
 
@@ -40,4 +54,4 @@ export const postRelations = relations(posts, ({ one }) => ({
     fields: [posts.authorId],
     references: [users.id],
   }),
-}))
+}));

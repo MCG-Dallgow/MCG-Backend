@@ -1,27 +1,53 @@
 import { RequestHandler } from 'express';
-import { sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 import * as auth from './auth';
 import db from '../db/db';
-import { Staff, staff } from '../db/schema';
+import { Staff, staff, Subject, subjects, staffToSubjects } from '../db/schema';
 
 // fetch, reformat and return staff data from WebUntis
 export const getStaff: RequestHandler = async (req, res) => {
     // authenticate and start WebUntis API session
     const [untis, _] = await auth.authenticate(req, res, true);
     if (untis) {
-      // fetch and reformat WebUntis teacher data
-      const teachers = formatTeachers(await untis.getTeachers());
+        // fetch and reformat WebUntis teacher data
+        const teachers = formatTeachers(await untis.getTeachers());
 
-      // update new teachers in database
-      await db.insert(staff).values(teachers).onDuplicateKeyUpdate({ set: { id: sql`id` } });
+        // update new teachers in database
+        await db.insert(staff).values(teachers).onDuplicateKeyUpdate({ set: { id: sql`id` } });
 
-      // exit WebUntis API session
-      await untis.logout();
+        // exit WebUntis API session
+        await untis.logout();
     }
 
     // get all staff members from database
-    const staffMembers = await db.select().from(staff);
+    const staffData = await db.select()
+        .from(staffToSubjects)
+        .rightJoin(staff, eq(staffToSubjects.staffId, staff.id))
+        .leftJoin(subjects, eq(staffToSubjects.subjectId, subjects.id));
+
+    // reformat staff member data
+    let staffMembers: (Staff & {
+        subjects: Subject[],
+    })[] = [];
+    let lastPersonId = "";
+    for (const entry of staffData) {
+        if (entry.staff.id != lastPersonId) {
+            staffMembers.push({
+                id: entry.staff.id,
+                firstname: entry.staff.id,
+                lastname: entry.staff.id,
+                gender: entry.staff.gender,
+                email: entry.staff.email,
+                subjects: [],
+            });
+            lastPersonId = entry.staff.id;
+        }
+
+        if (staffMembers.length > 0 && entry.subject != null) {
+            staffMembers.at(-1)!.subjects.push(entry.subject);
+        }
+    }
 
     // return staff data
     return res.status(200).json({ data: staffMembers });
@@ -41,6 +67,7 @@ function formatTeachers(teachers: any): Staff[] {
             firstname: teacher.foreName,
             lastname: teacher.longName,
             email: generateTeacherEmail(teacher.foreName, teacher.longName),
+            gender: null,
         });
     }
 
