@@ -18,11 +18,15 @@ async function getStudentGroup(untis: WebUntis): Promise<string> {
 // check WebUntis credentials and return API session
 export async function authenticate(req: Request, res: Response, requireUser: boolean): Promise<[WebUntis | undefined, User | undefined]> {
     // get credentials from authorization header
-    const base64String: string = req.headers.authorization?.split(' ')[1]!;
+    const base64String: string = req.headers.authorization?.split(' ')[1] ?? '';
     const credentials: string = Buffer.from(base64String, 'base64').toString();
-    const username: string = credentials.split(':')[0];
-    const password: string = credentials.split(':')[1];
+    const username: string = credentials.split(':')[0] ?? '';
+    const password: string = credentials.split(':')[1] ?? '';
 
+    if (base64String == '' || username == '' || password == '') {
+        return [undefined, undefined];
+    }
+    
     // check WebUntis credentials and start API session
     var untis: WebUntis = new WebUntisSecretAuth(
         'Marie-Curie-Gym',
