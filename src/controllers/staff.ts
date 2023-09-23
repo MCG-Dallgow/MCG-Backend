@@ -9,16 +9,16 @@ import { Staff, staff } from '../db/schema';
 export const getStaff: RequestHandler = async (req, res) => {
     // authenticate and start WebUntis API session
     const [untis, _] = await auth.authenticate(req, res, true);
-    if (!untis) return; // abort if authentication was unsuccessful
+    if (untis) {
+      // fetch and reformat WebUntis teacher data
+      const teachers = formatTeachers(await untis.getTeachers());
 
-    // fetch and reformat WebUntis teacher data
-    const teachers = formatTeachers(await untis.getTeachers());
+      // update new teachers in database
+      await db.insert(staff).values(teachers).onDuplicateKeyUpdate({ set: { id: sql`id` } });
 
-    // update new teachers in database
-    await db.insert(staff).values(teachers).onDuplicateKeyUpdate({ set: { id: sql`id` } });
-
-    // exit WebUntis API session
-    await untis.logout();
+      // exit WebUntis API session
+      await untis.logout();
+    }
 
     // get all staff members from database
     const staffMembers = await db.select().from(staff);
