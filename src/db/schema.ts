@@ -4,14 +4,24 @@ import { relations } from 'drizzle-orm';
 // --- USER ---
 
 export const users = mysqlTable('users', {
-  id: varchar('name', { length: 8 }).primaryKey(),
+  id: varchar('id', { length: 8 }).primaryKey(),
   firstname: varchar('firstname', { length: 50 }).notNull(),
   lastname: varchar('lastname', { length: 50 }).notNull(),
   type: mysqlEnum('type', ['student', 'teacher']).notNull(),
   grade: tinyint('grade'),
-  group: varchar('group', { length: 3 })
+  group: varchar('group', { length: 3 }),
 });
 export type User = typeof users.$inferSelect;
+
+// --- STAFF ---
+
+export const staff = mysqlTable('staff', {
+  id: varchar('id', { length: 8 }).primaryKey(),
+  firstname: varchar('firstname', { length: 50 }).notNull(),
+  lastname: varchar('lastname', { length: 50 }).notNull(),
+  email: varchar('email', { length: 256 }).primaryKey(),
+});
+export type Staff = typeof staff.$inferSelect;
 
 // --- POST ---
 
@@ -21,11 +31,11 @@ export const posts = mysqlTable('posts', {
   authorId: varchar('author_id', { length: 8 }).notNull().references(() => users.id),
   creationDate: date('creation_date'),
   editedDate: date('edited_date'),
-  data: varchar('data', { length: 500 }).notNull()
+  data: text('data').notNull(),
 });
 export type Post = typeof posts.$inferSelect;
 
-export const postRelations = relations(posts, ({ one, many }) => ({
+export const postRelations = relations(posts, ({ one }) => ({
   author: one(users, {
     fields: [posts.authorId],
     references: [users.id],

@@ -1,9 +1,12 @@
 import { RequestHandler } from 'express';
+import { sql } from 'drizzle-orm';
 
 import * as auth from './auth';
+import db from '../db/db';
+import { Staff, staff } from '../db/schema';
 
-// fetch, reformat and return teacher data from WebUntis
-export const getTeachers: RequestHandler = async (req, res) => {
+// fetch, reformat and return staff data from WebUntis
+export const getStaff: RequestHandler = async (req, res) => {
     // authenticate and start WebUntis API session
     const [untis, _] = await auth.authenticate(req, res, true);
     if (!untis) return; // abort if authentication was unsuccessful
@@ -11,15 +14,21 @@ export const getTeachers: RequestHandler = async (req, res) => {
     // fetch and reformat WebUntis teacher data
     const teachers = formatTeachers(await untis.getTeachers());
 
+    // update new teachers in database
+    await db.insert(staff).values(teachers).onDuplicateKeyUpdate({ set: { id: sql`id` } });
+
     // exit WebUntis API session
     await untis.logout();
 
-    // return teacher data
-    return res.status(200).json({ data: teachers });
+    // get all staff members from database
+    const staffMembers = await db.select().from(staff);
+
+    // return staff data
+    return res.status(200).json({ data: staffMembers });
 };
 
 // reformat WebUntis teacher data
-function formatTeachers(teachers: any) {
+function formatTeachers(teachers: any): Staff[] {
     const formattedTeachers = [];
 
     for (const teacher of teachers) {
@@ -31,7 +40,7 @@ function formatTeachers(teachers: any) {
             id: teacher.name,
             firstname: teacher.foreName,
             lastname: teacher.longName,
-            email: generateMCGEmail(teacher.foreName, teacher.longName),
+            email: generateTeacherEmail(teacher.foreName, teacher.longName),
         });
     }
 
@@ -39,7 +48,7 @@ function formatTeachers(teachers: any) {
 }
 
 // generate teacher email address from first and last name
-function generateMCGEmail(firstname: string, lastname: string) {
+function generateTeacherEmail(firstname: string, lastname: string) {
     firstname = replaceDiacritics(firstname.toLowerCase());
     lastname = replaceDiacritics(lastname.toLowerCase());
     return `${firstname}.${lastname}@lk.brandenburg.de`;
@@ -48,6 +57,7 @@ function generateMCGEmail(firstname: string, lastname: string) {
 // replace diacritics like umlauts
 function replaceDiacritics(input: string) {
     return input
+        .replaceAll(' ', '-')
         .replaceAll('ä', 'ae')
         .replaceAll('Ä', 'Ae')
         .replaceAll('ö', 'oe')
