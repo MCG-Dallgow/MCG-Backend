@@ -34,7 +34,7 @@ export const getCourses: RequestHandler = async (req, res) => {
             }
         }
 
-        if(courses.filter((c) => c.id == course.name).length == 0) {
+        if (courses.filter((c) => c.id == course.name).length == 0) {
             courses.push({
                 id: course.name,
                 subject: getSubjectId(course.longName),

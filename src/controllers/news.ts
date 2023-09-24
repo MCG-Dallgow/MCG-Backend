@@ -7,7 +7,7 @@ import { desc } from 'drizzle-orm';
 
 export const getPosts: RequestHandler = async (_, res) => {
     const result = await db.select().from(posts).orderBy(desc(posts.creationDate));
-        
+
     res.json({ data: result });
 }
 

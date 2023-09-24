@@ -26,7 +26,7 @@ export async function authenticate(req: Request, res: Response, requireUser: boo
     if (base64String == '' || username == '' || password == '') {
         return [undefined, undefined];
     }
-    
+
     // check WebUntis credentials and start API session
     var untis: WebUntis = new WebUntisSecretAuth(
         'Marie-Curie-Gym',
@@ -47,7 +47,7 @@ export async function authenticate(req: Request, res: Response, requireUser: boo
         );
         try {
             await untis.login();
-        } catch(err) {
+        } catch (err) {
             res.status(401).json({ message: 'invalid credentials' });
             return [undefined, undefined];
         }
