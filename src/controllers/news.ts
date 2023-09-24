@@ -9,7 +9,7 @@ export const getPosts: RequestHandler = async (_, res) => {
     const result = await db.select().from(posts).orderBy(desc(posts.creationDate));
 
     res.json({ data: result });
-}
+};
 
 export const addPost: RequestHandler = async (req, res) => {
     // authenticate and start WebUntis API session
@@ -23,4 +23,4 @@ export const addPost: RequestHandler = async (req, res) => {
     await db.insert(posts).values({ title: title, authorId: user!.id, creationDate: now, editedDate: now, data: data });
 
     res.json({ message: "ok" });
-}
+};

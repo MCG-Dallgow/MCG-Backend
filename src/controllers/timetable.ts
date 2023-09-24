@@ -2,7 +2,7 @@ import { RequestHandler } from 'express';
 import { Lesson } from 'webuntis';
 
 import * as auth from './auth';
-import { getSubjectId } from '../util/util'
+import { getSubjectId } from '../util/util';
 
 // fetch, reformat and return timetable data from WebUntis
 export const getTimetable: RequestHandler = async (req, res) => {
@@ -92,7 +92,7 @@ function formatTimetable(timetable: Lesson[], studentGroup: string) {
             const course = {
                 id: current.su[0].name,
                 subject: getSubjectId(current.su[0].longname),
-            }
+            };
 
             // append formatted lesson to new timetable object
             formattedTimetable.push({

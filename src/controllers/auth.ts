@@ -4,15 +4,15 @@ import { RequestHandler, Request, Response } from 'express';
 import { eq } from 'drizzle-orm';
 
 import db from '../db/db';
-import { User, users } from '../db/schema'
+import { User, users } from '../db/schema';
 
 async function getStudentGroup(untis: WebUntis): Promise<string> {
     const groupId = untis.sessionInformation!.klasseId!;
     const schoolYearId = (await untis.getLatestSchoolyear()).id;
     const groups = await untis.getClasses(undefined, schoolYearId);
     const group = groups.filter((group) => group.id == groupId)[0];
-    const groupName = group.name.replace('Jhg', '')
-    return groupName
+    const groupName = group.name.replace('Jhg', '');
+    return groupName;
 }
 
 // check WebUntis credentials and return API session
@@ -91,7 +91,7 @@ export const login: RequestHandler = async (req, res) => {
             type: 'student',
             grade: grade,
             group: group,
-        })
+        });
 
         user = (await db.select().from(users).where(eq(users.id, student.name)))[0];
     }

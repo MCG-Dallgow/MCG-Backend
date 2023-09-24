@@ -1,7 +1,7 @@
 import { RequestHandler } from 'express';
 
 import * as auth from './auth';
-import { getSubjectId } from '../util/util'
+import { getSubjectId } from '../util/util';
 
 export const getCourses: RequestHandler = async (req, res) => {
     // authenticate and start WebUntis API session
