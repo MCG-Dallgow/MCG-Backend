@@ -1,5 +1,4 @@
-import { mysqlEnum, mysqlTable, varchar, text, tinyint, int, date } from 'drizzle-orm/mysql-core';
-import { relations } from 'drizzle-orm';
+import { mysqlEnum, mysqlTable, varchar, tinyint } from 'drizzle-orm/mysql-core';
 
 // --- USER ---
 
@@ -36,22 +35,3 @@ export const staffToSubjects = mysqlTable('staff_to_subjects', {
     staffId: varchar('staff_id', { length: 8 }).notNull().references(() => staff.id),
     subjectId: varchar('subject_id', { length: 3 }).notNull().references(() => subjects.id),
 });
-
-// --- POST ---
-
-export const posts = mysqlTable('posts', {
-    id: int('id').autoincrement().primaryKey(),
-    title: varchar('title', { length: 100 }).notNull(),
-    authorId: varchar('author_id', { length: 8 }).notNull().references(() => users.id),
-    creationDate: date('creation_date'),
-    editedDate: date('edited_date'),
-    data: text('data').notNull(),
-});
-export type Post = typeof posts.$inferSelect;
-
-export const postRelations = relations(posts, ({ one }) => ({
-    author: one(users, {
-        fields: [posts.authorId],
-        references: [users.id],
-    }),
-}));
