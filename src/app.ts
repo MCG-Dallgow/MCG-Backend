@@ -17,13 +17,13 @@ app.use(urlencoded({ extended: false }));
 // ROUTER
 import authRouter from './routes/auth.route';
 import adminRouter from './routes/admin.route';
-//import timetableRouter from './routes/timetable.route';
+import timetableRouter from './routes/timetable.route';
 //import staffRouter from './routes/staff.route';
 //import coursesRouter from './routes/courses.route';
 
 app.use('/auth/', authRouter);
 app.use('/admin/', adminRouter);
-//app.use('/timetable/', timetableRouter);
+app.use('/timetable/', timetableRouter);
 //app.use('/staff/', staffRouter);
 //app.use('/courses/', coursesRouter);
 

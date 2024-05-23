@@ -1,30 +1,33 @@
-import { RequestHandler } from 'express';
 import { Lesson } from 'webuntis';
 
-import * as auth from './auth';
 import { getSubjectId } from '../util/util';
+import { User, students } from '../models/schema';
+import { startWebUntisSession } from './webuntis.service';
+import db from '../config/db.config';
+import { eq } from 'drizzle-orm';
 
 // fetch, reformat and return timetable data from WebUntis
-export const getTimetable: RequestHandler = async (req, res) => {
-    // authenticate and start WebUntis API session
-    const [untis, user] = await auth.authenticate(req, res, true);
-    if (!untis) return; // abort if authentication was unsuccessful
-
-    // get date range from request body
-    const startDate = new Date(req.body['startdate']);
-    const endDate = new Date(req.body['enddate']);
+export async function getTimetable(user: User, startDate: Date, endDate: Date) {
+    // start WebUntis API session
+    const untisSession = await startWebUntisSession(user.username, user.webuntisKey);
+    if (!untisSession) {
+        return undefined;
+    }
 
     // fetch timetable data from WebUntis API
-    const timetable = await untis.getOwnTimetableForRange(startDate, endDate);
+    const timetable = await untisSession.getOwnTimetableForRange(startDate, endDate);
 
     // exit WebUntis API session
-    untis.logout();
+    untisSession.logout();
+
+    // get student data
+    const student = (await db.select().from(students).where(eq(students.id, user.id)))[0];
 
     // format timetable data
-    const formattedTimetable = formatTimetable(timetable, user!.group!);
+    const formattedTimetable = formatTimetable(timetable, student.group);
 
     // return timetable data
-    res.json({ data: formattedTimetable });
+    return formattedTimetable;
 };
 
 // format timetable data for increased readability and efficiency
