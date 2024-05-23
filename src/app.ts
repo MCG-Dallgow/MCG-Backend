@@ -16,14 +16,16 @@ app.use(urlencoded({ extended: false }));
 
 // ROUTER
 import authRouter from './routes/auth';
-import timetableRouter from './routes/timetable';
-import staffRouter from './routes/staff';
-import coursesRouter from './routes/courses';
+import adminRouter from './routes/admin';
+//import timetableRouter from './routes/timetable';
+//import staffRouter from './routes/staff';
+//import coursesRouter from './routes/courses';
 
 app.use('/auth/', authRouter);
-app.use('/timetable/', timetableRouter);
-app.use('/staff/', staffRouter);
-app.use('/courses/', coursesRouter);
+app.use('/admin/', adminRouter);
+//app.use('/timetable/', timetableRouter);
+//app.use('/staff/', staffRouter);
+//app.use('/courses/', coursesRouter);
 
 // ERROR MESSAGE
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
