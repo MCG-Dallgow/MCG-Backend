@@ -2,7 +2,7 @@ import { drizzle } from 'drizzle-orm/mysql2';
 import mysql from 'mysql2';
 import dotenv from 'dotenv';
 
-import * as schema from './schema';
+import * as schema from '../models/schema';
 
 dotenv.config();
 

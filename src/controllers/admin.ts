@@ -1,30 +1,12 @@
-import { RequestHandler } from "express";
-import db from "../db/db";
-import { users } from "../db/schema";
-import { startWebUntisSession, getStudents } from "./webuntis";
+import { RequestHandler } from 'express';
+
+import * as admin from '../services/admin.service';
 
 export const loadStudents: RequestHandler = async (req, res) => {
-    const username = process.env.WEBUNTIS_USERNAME ?? '';
-    const key = process.env.WEBUNTIS_KEY ?? '';
+    const adminUsername = process.env.WEBUNTIS_USERNAME ?? '';
+    const adminKey = process.env.WEBUNTIS_KEY ?? '';
 
-    if (username == '' || key == '') {
-        res.status(401).json({ success: false });
-        return;
-    }
+    const success = await admin.loadStudents(adminUsername, adminKey);
 
-    const untisSession = await startWebUntisSession(username, key);
-    if (!untisSession) {
-        res.status(401).json({ success: false });
-        return;
-    }
-
-    const userData = await getStudents(untisSession);
-
-    // end WebUntis session
-    await untisSession.logout();
-
-    await db.insert(users).values(userData);
-
-    res.json({ success: true });
+    res.json({ success: success });
 }
-

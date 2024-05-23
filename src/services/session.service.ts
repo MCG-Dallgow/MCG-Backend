@@ -1,8 +1,8 @@
 import crypto from 'crypto';
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
-import db from '../../db/db';
-import { User, sessions } from '../../db/schema';
+import db from '../config/db.config';
+import { User, sessions, users } from '../models/schema';
 
 
 export async function generateSessionToken(user: User, validForDays: number = 7) {
@@ -19,24 +19,27 @@ export async function generateSessionToken(user: User, validForDays: number = 7)
     return token;
 }
 
-export async function checkSessionToken(user: User, token: string) {
+export async function checkSessionToken(token: string) {
     var session = (await db
         .select()
         .from(sessions)
-        .where(and(eq(sessions.userId, user.id), eq(sessions.token, token))))[0];
+        .where(eq(sessions.token, token)))[0];
 
     // deny if token is invalid
     if (!session) {
-        return false;
+        return undefined;
     }
 
     // deny if token is expired
     if (new Date() > session.expiresAt) {
         invalidateSessionToken(token);  // remove expired session
-        return false;
+        return undefined;
     }
 
-    return true;
+    // get user
+    const user = (await db.select().from(users).where(eq(users.id, session.userId)))[0];
+
+    return user;
 }
 
 async function invalidateSessionToken(token: string) {

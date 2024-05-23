@@ -1,7 +1,7 @@
 import { RequestHandler } from 'express';
 
-import { loginUser, createStudent } from './logic/users';
-import { generateSessionToken } from './logic/sessions';
+import { loginUser, createStudent } from '../services/user.service';
+import { generateSessionToken } from '../services/session.service';
 
 function getCredentialsFromAuthorizationHeader(authorizationHeader: string | undefined): [string, string] {
     const base64String: string = authorizationHeader?.split(' ')[1] ?? '';

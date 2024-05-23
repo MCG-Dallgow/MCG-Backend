@@ -8,9 +8,9 @@ export const users = mysqlTable('users', {
     firstname: varchar('firstname', { length: 50 }).notNull(),
     lastname: varchar('lastname', { length: 50 }).notNull(),
     gender: mysqlEnum('gender', ['M', 'F', 'D']),
-    registered: boolean('registered').default(false),
-    hashedPassword: varchar('hashed_password', { length: 64 }),
-    webuntisKey: varchar('webuntis_key', { length: 16 }),
+    registered: boolean('registered').default(false).notNull(),
+    hashedPassword: varchar('hashed_password', { length: 64 }).default('').notNull(),
+    webuntisKey: varchar('webuntis_key', { length: 16 }).default('').notNull(),
 });
 export type User = typeof users.$inferSelect;
 
@@ -18,8 +18,8 @@ export type User = typeof users.$inferSelect;
 
 export const students = mysqlTable('students', {
     id: int('id').primaryKey().references(() => users.id, { onDelete: 'cascade' }).notNull(),
-    grade: tinyint('grade'),
-    group: varchar('group', { length: 3 }),
+    grade: tinyint('grade').notNull(),
+    group: varchar('group', { length: 3 }).notNull(),
 });
 export type Student = typeof students.$inferSelect;
 

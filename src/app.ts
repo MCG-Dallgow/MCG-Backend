@@ -15,11 +15,11 @@ app.use(json());
 app.use(urlencoded({ extended: false }));
 
 // ROUTER
-import authRouter from './routes/auth';
-import adminRouter from './routes/admin';
-//import timetableRouter from './routes/timetable';
-//import staffRouter from './routes/staff';
-//import coursesRouter from './routes/courses';
+import authRouter from './routes/auth.route';
+import adminRouter from './routes/admin.route';
+//import timetableRouter from './routes/timetable.route';
+//import staffRouter from './routes/staff.route';
+//import coursesRouter from './routes/courses.route';
 
 app.use('/auth/', authRouter);
 app.use('/admin/', adminRouter);

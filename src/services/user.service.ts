@@ -1,9 +1,9 @@
 import bcrypt from 'bcrypt';
 import { eq } from 'drizzle-orm';
 
-import db from '../../db/db';
-import { users, students } from '../../db/schema';
-import { startWebUntisSession, getStudentGroup } from '../webuntis';
+import db from '../config/db.config';
+import { users, students } from '../models/schema';
+import { startWebUntisSession, getStudentGroup } from './webuntis.service';
 
 async function createBaseUser(username: string, password: string) {
     if (username == '' || password == '') {
